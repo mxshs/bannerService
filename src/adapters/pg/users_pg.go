@@ -18,6 +18,8 @@ func (db *PgDB) GetUser(uid int) (*domain.User, error) {
         return nil, err
     }
 
+    defer res.Close()
+
     if !res.Next() {
         return nil, nil
     }
@@ -43,6 +45,8 @@ func (db *PgDB) LoginUser(username, password string) (*domain.User, error) {
     if err != nil {
         return nil, err
     }
+
+    defer res.Close()
 
     if !res.Next() {
         return nil, nil
@@ -74,6 +78,8 @@ func (db *PgDB) CreateUser(username, password string, role domain.Role) (*domain
         return nil, err
     }
 
+    defer res.Close()
+
     if !res.Next() {
         return nil, fmt.Errorf("unexpected empty result set after successful insertion")
     }
@@ -104,6 +110,8 @@ func (db *PgDB) UpdateUser(id int, username, password *string, role *domain.Role
     if err != nil {
         return nil, err
     }
+
+    defer res.Close()
 
     if !res.Next() {
         return nil, fmt.Errorf("unexpected empty result set after successful update")

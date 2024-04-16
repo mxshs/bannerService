@@ -29,6 +29,8 @@ func (db *PgDB) GetBanner(tagId int, featureId int) (*domain.Banner, error) {
         return nil, err
     }
 
+    defer res.Close()
+
     if !res.Next() {
         return nil, nil
     }
@@ -66,6 +68,8 @@ func (db *PgDB) GetBanners(tagId *int, featureId *int, limit int, offset int) ([
         return nil, err
     }
 
+    defer res.Close()
+
     banners := make([]*domain.BannerDetails, 0, limit)
 
     for idx := 0; idx < limit; idx++ {
@@ -101,6 +105,8 @@ func (db *PgDB) GetBanners(tagId *int, featureId *int, limit int, offset int) ([
             banner.Tags = append(banner.Tags, tag)
         }
 
+        tags.Close()
+
         feature, err := db.db.Query(
             `
             SELECT fid FROM banner_features
@@ -122,6 +128,8 @@ func (db *PgDB) GetBanners(tagId *int, featureId *int, limit int, offset int) ([
             banner.Feature = &featureId
         }
 
+        feature.Close()
+
         banners = append(banners, &banner)
     }
 
@@ -141,7 +149,7 @@ func (db *PgDB) CreateBanner(tagIds []int, featureId int, content domain.BannerC
         }
     }()
 
-    banner, err := transaction.Query(
+    res, err := transaction.Query(
         `
         INSERT INTO banners(content, is_active, created_at, updated_at)
         VALUES ($1, $2, $3, $4)
@@ -156,18 +164,16 @@ func (db *PgDB) CreateBanner(tagIds []int, featureId int, content domain.BannerC
         return 0, err
     }
 
-    if !banner.Next() {
+    defer res.Close()
+
+    if !res.Next() {
         return 0, fmt.Errorf("unexpected empty result set after successful insertion")
     }
 
     var bannerId int
 
-    err = banner.Scan(&bannerId)
+    err = res.Scan(&bannerId)
     if err != nil {
-        return 0, err
-    }
-
-    if err = banner.Close(); err != nil {
         return 0, err
     }
 

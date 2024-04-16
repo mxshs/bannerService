@@ -16,6 +16,10 @@ func NewDB(connString string) *PgDB {
         panic(err)
     }
 
+    db.SetMaxOpenConns(100)
+    db.SetConnMaxIdleTime(0)
+    db.SetMaxIdleConns(0)
+
     return &PgDB{
         db: db,
     }
